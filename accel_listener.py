@@ -1,6 +1,6 @@
 import serial
 import time
-import multiprocessing
+import threading as thr
 
 
 class Accel:
@@ -8,17 +8,23 @@ class Accel:
         self.port = '/dev/ttyUSB0'
         self.timeout = 1
         self.is_connected = False
-        self.stream = None
+        self.ser = None
 
         self.last_data = None
         self.is_data_available = False
 
         self.connect()
-        self.run_stream()
+
+        self.lock = thr.Lock()
+
+        self.stream = thr.Thread(target=self.run_stream, args=())
+        self.stream.start()
+        # self.stream.join()
+        # self.run_stream()
 
     def connect(self):
         try:
-            self.stream = serial.Serial(self.port, 9600, timeout=self.timeout)
+            self.ser = serial.Serial(self.port, 9600, timeout=self.timeout)
             self.is_connected = True
         except serial.serialutil.SerialException as err:
             print(f"Unexpected {err=}, {type(err)=}\n")
@@ -33,14 +39,16 @@ class Accel:
                 self.is_connected = False
                 break
 
-            line = self.stream.readline()
+            line = self.ser.readline()
             if line[0] != 88:
                 print(str(line, "utf-8"))
                 continue
             accel = list(map(float, line.strip().split()[1::2]))
             print(f'Get Accelerometer data: X={accel[0]}, Y={accel[1]}, Z={accel[2]}, delay={period}')
+            self.lock.acquire()
             self.last_data = [accel, period, get_time]
             self.is_data_available = True
+            self.lock.release()
 
         print("stream is shout down!")
 
@@ -49,7 +57,7 @@ class Accel:
         time_ceiling = start_time + self.timeout
         while time.time() < time_ceiling:
             get_time = time.time()
-            if self.stream.in_waiting:
+            if self.ser.in_waiting:
                 #print(f"Data is ready! get_time: {get_time} \nperiod {get_time-start_time}")
                 return True, get_time-start_time, get_time
             time.sleep(period)
@@ -57,14 +65,19 @@ class Accel:
         return False, None, None
 
     def get_data(self):
+        out = None
+        self.lock.acquire()
         if self.is_data_available:
-            return self.last_data
-        return None
+            self.is_data_available = False
+            out = self.last_data
+        self.lock.release()
+        return out
 
 
 if __name__ == "__main__":
     test = Accel()
     while True:
         t = test.get_data()
-        print(t)
+        if t:
+            print(t)
 
