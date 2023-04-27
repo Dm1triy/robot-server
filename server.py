@@ -1,4 +1,5 @@
 import socket
+import time
 from accel_listener import Accel
 import threading as thr
 
@@ -11,44 +12,39 @@ class Server:
         self.server_socket = socket.socket()
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
-        print('Port opened')
+        print("(Server):\n    Port opened\n")
 
         self.server_is_running = True
 
         conn, address = self.server_socket.accept()
         self.conn = conn
         self.conn_addres = address
-        print("Connection from: " + str(address))
+        print(f"(Server):\n    Connection from: {str(address)}\n")
+
+        self.interaction()
 
     def __del__(self):
         self.conn.close()
+        print("(Server):\n    Port closed\n")
 
     def interaction(self):
         while self.server_is_running:
             data = self.conn.recv(1024).decode()
             if data == "Give me acceleration":
-                self.send_data()
+                accel = self.get_accel()
+                print(f"(Server):\n    Sending time: {time.time()}, Delay {time.time()-accel[2]}\n")
+                self.conn.sendall(accel)
                 continue
-            if data == "Kill":
+            if data == "Stop":
                 self.server_is_running = False
 
-    def send_data(self):
-        data = self.accel_stream.get_data()
-        while not data:
+    def get_accel(self):
+        while True:
             data = self.accel_stream.get_data()
-        self.conn.sendall(data)
+            if data:
+                return data
 
 
-
-# with socket.socket() as s:
-#     s.bind((host, port))
-#     s.listen()
-#     conn, addr = s.accept()
-#     with conn:
-#         print(f"Connected by {addr}")
-#         while True:
-#             data = conn.recv(1024)
-#             if not data:
-#                 break
-#             conn.sendall(data)
-
+if __name__ == "__main__":
+    serv = Server(host=socket.gethostname())
+    del serv

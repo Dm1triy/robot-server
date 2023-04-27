@@ -27,8 +27,8 @@ class Accel:
             self.ser = serial.Serial(self.port, 9600, timeout=self.timeout)
             self.is_connected = True
         except serial.serialutil.SerialException as err:
-            print(f"Unexpected {err=}, {type(err)=}\n")
-            print(f"can't listen port {self.port}")
+            print(f"(Serial):\n    Unexpected {err=}, {type(err)=}\n")
+            print(f"(Serial):\n    Can't listen port {self.port}\n")
             self.is_connected = False
         time.sleep(1)
 
@@ -44,13 +44,13 @@ class Accel:
                 print(str(line, "utf-8"))
                 continue
             accel = list(map(float, line.strip().split()[1::2]))
-            print(f'Get Accelerometer data: X={accel[0]}, Y={accel[1]}, Z={accel[2]}, delay={period}')
+            print(f'(Serial):\n    Get Accelerometer data: X={accel[0]}, Y={accel[1]}, Z={accel[2]}, delay={period}\n')
             self.lock.acquire()
             self.last_data = [accel, period, get_time]
             self.is_data_available = True
             self.lock.release()
 
-        print("stream is shout down!")
+        print("(Serial):\n    Stream is shout down!\n")
 
     def wait_until_data(self, period=0.1):
         start_time = time.time()
@@ -61,7 +61,7 @@ class Accel:
                 #print(f"Data is ready! get_time: {get_time} \nperiod {get_time-start_time}")
                 return True, get_time-start_time, get_time
             time.sleep(period)
-        print(f"Timeout {self.port}")
+        print(f"(Serial):\n    Timeout {self.port}\n")
         return False, None, None
 
     def get_data(self):
