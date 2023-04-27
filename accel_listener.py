@@ -44,7 +44,7 @@ class Accel:
                 print(str(line, "utf-8"))
                 continue
             accel = list(map(float, line.strip().split()[1::2]))
-            print(f'(Serial):\n    Get Accelerometer data: X={accel[0]}, Y={accel[1]}, Z={accel[2]}, delay={period}\n')
+            #print(f'(Serial):\n    Get Accelerometer data: X={accel[0]}, Y={accel[1]}, Z={accel[2]}, delay={period}\n')
             self.lock.acquire()
             self.last_data = [accel, period, get_time]
             self.is_data_available = True

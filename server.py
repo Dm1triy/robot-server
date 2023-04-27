@@ -33,7 +33,8 @@ class Server:
             if data == "Give me acceleration":
                 accel = self.get_accel()
                 print(f"(Server):\n    Sending time: {time.time()}, Delay {time.time()-accel[2]}\n")
-                self.conn.sendall(accel)
+                msg = f'{accel[0][0]}, {accel[0][1]}, {accel[0][2]}, {accel[1]}, {accel[2]}'
+                self.conn.sendall(str.encode(msg))
                 continue
             if data == "Stop":
                 self.server_is_running = False

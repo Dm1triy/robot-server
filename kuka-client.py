@@ -20,8 +20,8 @@ class Client:
         while True:
             self.client_socket.sendall(b"Give me acceleration")
             data = self.client_socket.recv(1024).decode()
-            print(f"(Client)\n    Time{time.time()}. Received {data!r}")
+            print(f"(Client)\n    Time: {time.time()}. Received {data!r}")
 
 
 if __name__ == "__main__":
-    pk = Client()
+    pk = Client(host=socket.gethostname())
