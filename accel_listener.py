@@ -22,6 +22,10 @@ class Accel:
         # self.stream.join()
         # self.run_stream()
 
+    def __del__(self):
+        if self.ser:
+            self.ser.close()
+
     def connect(self):
         try:
             self.ser = serial.Serial(self.port, 9600, timeout=self.timeout)
@@ -76,6 +80,9 @@ class Accel:
 
 if __name__ == "__main__":
     test = Accel()
+    if not test.is_connected:
+        del test
+
     while True:
         t = test.get_data()
         if t:

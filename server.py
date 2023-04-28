@@ -24,6 +24,8 @@ class Server:
         self.interaction()
 
     def __del__(self):
+        self.accel_stream.is_connected = False
+        self.server_socket.close()
         self.conn.close()
         print("(Server):\n    Port closed\n")
 
@@ -32,12 +34,15 @@ class Server:
             data = self.conn.recv(1024).decode()
             if data == "Give me acceleration":
                 accel = self.get_accel()
-                print(f"(Server):\n    Sending time: {time.time()}, Delay {time.time()-accel[2]}\n")
+                sending_time = time.time()
+                print(f"(Server):\n    Sending time: {sending_time}, Delay {time.time()-accel[2]}\n")
                 msg = f'{accel[0][0]}, {accel[0][1]}, {accel[0][2]}, {accel[1]}, {accel[2]}'
+                print(f"    {msg}")
                 self.conn.sendall(str.encode(msg))
                 continue
             if data == "Stop":
                 self.server_is_running = False
+                return
 
     def get_accel(self):
         while True:
